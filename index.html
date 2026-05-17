@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="corporate">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiveCart — Stop chasing payments through DMs</title>
+  <meta name="description" content="A shareable checkout page for Instagram live sellers. Set up your items, drop the link in your stream, and stop chasing payments through DMs.">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400&display=swap" rel="stylesheet">
+
+  <style>
+    *, body { font-family: 'DM Sans', sans-serif; }
+
+    .grid-bg {
+      background-color: #fff;
+      background-image:
+        linear-gradient(#f1f5f9 1px, transparent 1px),
+        linear-gradient(90deg, #f1f5f9 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .phone {
+      width: 220px;
+      background: #0f172a;
+      border-radius: 36px;
+      padding: 12px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.06) inset;
+      zoom: 1.25;
+    }
+    .phone-inner {
+      background: #fff;
+      border-radius: 26px;
+      overflow: hidden;
+    }
+    .phone-notch {
+      width: 60px; height: 12px;
+      background: #0f172a;
+      border-radius: 0 0 10px 10px;
+      margin: 0 auto 10px;
+    }
+
+    .item-card {
+      border-bottom: 1px solid #f1f5f9;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .item-swatch {
+      width: 42px; height: 42px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .sold-badge {
+      background: #fee2e2; color: #dc2626;
+      font-size: 0.6rem; font-weight: 700;
+      padding: 2px 7px; border-radius: 99px;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .claim-btn {
+      background: #ec4899; color: #fff;
+      font-size: 0.65rem; font-weight: 700;
+      padding: 4px 10px; border-radius: 99px;
+      border: none; cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .bubble { opacity: 0; transform: translateY(8px); animation: fadeUp 0.35s ease forwards; }
+    .bubble:nth-child(1) { animation-delay: 0.2s; }
+    .bubble:nth-child(2) { animation-delay: 0.7s; }
+    .bubble:nth-child(3) { animation-delay: 1.3s; }
+    .bubble:nth-child(4) { animation-delay: 1.9s; }
+    @keyframes fadeUp { to { opacity: 1; transform: none; } }
+
+    input:focus { outline: none !important; border-color: #ec4899 !important; box-shadow: 0 0 0 3px rgba(236,72,153,0.12) !important; }
+    input::placeholder { color: #94a3b8; }
+
+    details summary::-webkit-details-marker { display: none; }
+    details[open] .faq-plus { transform: rotate(45deg); }
+    .faq-plus { transition: transform 0.2s ease; display: inline-block; }
+
+    .feature-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .feature-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.07); }
+
+    .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+
+    @keyframes pulse-red {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+      50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ef4444;
+      animation: pulse-red 1.5s infinite;
+      display: inline-block;
+    }
+
+    .cta-grad {
+      background: linear-gradient(135deg, #be185d 0%, #ec4899 50%, #f472b6 100%);
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-900">
+
+<!-- NAV -->
+<nav class="border-b border-slate-100 sticky top-0 bg-white z-50">
+  <div class="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
+    <span class="font-black text-[1.15rem] tracking-tighter text-slate-900">LiveCart</span>
+    <div class="flex items-center gap-3">
+      <a href="#how" class="hidden sm:block text-sm text-gray-500 font-medium hover:text-gray-800 transition-colors">How it works</a>
+      <a href="#faq" class="hidden sm:block text-sm text-gray-500 font-medium hover:text-gray-800 transition-colors">FAQ</a>
+      <a href="#waitlist" class="bg-pink-500 text-white text-[0.8rem] font-bold px-4 py-[0.4rem] rounded-lg no-underline">
+        Join waitlist
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="grid-bg px-5 py-20">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex flex-col lg:flex-row items-center gap-14 lg:gap-20">
+
+      <!-- Copy + form -->
+      <div class="flex-1 text-center lg:text-left">
+        <div class="inline-flex items-center gap-2 bg-pink-50 border border-pink-200 text-pink-700 text-[0.72rem] font-bold px-[0.9rem] py-[0.3rem] rounded-full mb-7 tracking-[0.05em] uppercase">
+          <span class="live-dot"></span>
+          Early access &nbsp;·&nbsp; Now open
+        </div>
+
+        <h1 class="text-[clamp(2.4rem,5vw,3.6rem)] font-black leading-[1.06] tracking-tighter text-slate-900 mb-5">
+          Stop chasing<br>payments through<br><span class="text-pink-500">DMs.</span>
+        </h1>
+
+        <p class="text-[1.05rem] text-slate-500 leading-[1.65] max-w-[440px] mx-auto mb-8 lg:mx-0">
+          LiveCart is a shareable checkout page for Instagram live sellers. Add your items, drop the link in your stream — buyers claim and pay on the spot.
+        </p>
+
+        <!-- WAITLIST FORM -->
+        <div id="waitlist" class="max-w-[400px] mx-auto lg:ml-0">
+          <form id="hero-form" onsubmit="submitWaitlist(event,'hero')">
+            <input id="h-name" name="name" type="text" placeholder="Your name" required
+              class="w-full border-[1.5px] border-slate-200 rounded-[10px] px-4 py-[0.65rem] text-[0.9rem] mb-2 bg-white text-slate-900 block">
+            <input id="h-email" name="email" type="email" placeholder="Email address" required
+              class="w-full border-[1.5px] border-slate-200 rounded-[10px] px-4 py-[0.65rem] text-[0.9rem] mb-2 bg-white text-slate-900 block">
+            <input id="h-how" name="how_you_sell" type="text" placeholder="How do you handle payments now? (e.g. PayPal DM)"
+              class="w-full border-[1.5px] border-slate-200 rounded-[10px] px-4 py-[0.65rem] text-[0.9rem] mb-3 bg-white text-slate-900 block">
+            <button type="submit"
+              class="w-full bg-pink-500 text-white font-extrabold text-[0.95rem] py-3 rounded-[10px] border-0 cursor-pointer">
+              Get early access →
+            </button>
+          </form>
+          <div id="hero-success" class="hidden bg-pink-50 border-[1.5px] border-pink-200 text-pink-700 p-4 rounded-[10px] font-bold text-[0.9rem] text-center">
+            ✓ You're on the list! We'll be in touch soon.
+          </div>
+          <p class="text-slate-400 text-[0.75rem] mt-3 text-center">No spam. Unsubscribe any time.</p>
+        </div>
+
+        <!-- Social proof -->
+        <div class="flex items-center gap-[0.6rem] mt-7 justify-center lg:justify-start">
+          <div class="flex">
+            <div class="w-7 h-7 rounded-full bg-pink-100 border-2 border-white flex items-center justify-center text-[0.6rem] font-extrabold text-pink-700 -ml-1">AV</div>
+            <div class="w-7 h-7 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center text-[0.6rem] font-extrabold text-indigo-700 -ml-1.5">SK</div>
+            <div class="w-7 h-7 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-[0.6rem] font-extrabold text-green-700 -ml-1.5">ML</div>
+            <div class="w-7 h-7 rounded-full bg-yellow-100 border-2 border-white flex items-center justify-center text-[0.6rem] font-extrabold text-yellow-700 -ml-1.5">PJ</div>
+          </div>
+          <span class="text-slate-400 text-[0.78rem]">Join <strong class="text-gray-700">38 sellers</strong> already on the waitlist</span>
+        </div>
+      </div>
+
+      <!-- Phone mockup -->
+      <div class="flex-shrink-0 flex justify-center">
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-inner">
+            <!-- App header -->
+            <div class="bg-slate-900 px-[14px] pt-[10px] pb-3 text-center">
+              <div class="text-[0.6rem] font-extrabold text-slate-50 tracking-[0.08em] uppercase mb-[2px]">LiveCart</div>
+              <div class="text-[0.68rem] text-slate-400 font-medium">@vintagebyvera · Friday Drop</div>
+              <div class="inline-flex items-center gap-1 bg-red-500/15 border border-red-500/30 rounded-full px-2 py-[2px] mt-[6px]">
+                <span class="live-dot !w-[5px] !h-[5px]"></span>
+                <span class="text-[0.55rem] font-bold text-red-400 tracking-[0.06em]">LIVE NOW</span>
+              </div>
+            </div>
+
+            <!-- Items -->
+            <div class="item-card">
+              <div class="item-swatch bg-pink-100">👗</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[0.72rem] font-bold text-slate-900">Vintage Levi jacket</div>
+                <div class="text-[0.65rem] text-slate-500">Size M · 1 left</div>
+              </div>
+              <div>
+                <div class="text-[0.68rem] font-extrabold text-slate-900 mb-[3px]">$65</div>
+                <button class="claim-btn">Claim</button>
+              </div>
+            </div>
+
+            <div class="item-card opacity-[0.45]">
+              <div class="item-swatch bg-indigo-100">👠</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[0.72rem] font-bold text-slate-900">90s platform heels</div>
+                <div class="text-[0.65rem] text-slate-500">Size 8</div>
+              </div>
+              <div>
+                <div class="text-[0.68rem] font-extrabold text-slate-900 mb-[3px]">$42</div>
+                <span class="sold-badge">SOLD</span>
+              </div>
+            </div>
+
+            <div class="item-card">
+              <div class="item-swatch bg-green-100">🧥</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[0.72rem] font-bold text-slate-900">Y2K puffer coat</div>
+                <div class="text-[0.65rem] text-slate-500">Size L · 1 left</div>
+              </div>
+              <div>
+                <div class="text-[0.68rem] font-extrabold text-slate-900 mb-[3px]">$89</div>
+                <button class="claim-btn">Claim</button>
+              </div>
+            </div>
+
+            <div class="item-card opacity-[0.45]">
+              <div class="item-swatch bg-yellow-100">👜</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[0.72rem] font-bold text-slate-900">Structured mini bag</div>
+                <div class="text-[0.65rem] text-slate-500">Tan leather</div>
+              </div>
+              <div>
+                <div class="text-[0.68rem] font-extrabold text-slate-900 mb-[3px]">$55</div>
+                <span class="sold-badge">SOLD</span>
+              </div>
+            </div>
+
+            <div class="px-[14px] py-[10px] bg-slate-50 border-t border-slate-100">
+              <div class="text-[0.6rem] text-slate-400 text-center">2 of 4 items remaining · Pay via Stripe</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM STRIP -->
+<section class="bg-slate-900 py-12 px-6">
+  <div class="max-w-3xl mx-auto text-center">
+    <p class="text-slate-500 text-[0.8rem] font-semibold mb-3 tracking-[0.07em] uppercase">Sound familiar?</p>
+    <h2 class="text-slate-50 text-[clamp(1.4rem,3.5vw,2rem)] font-extrabold leading-[1.3] tracking-tight">
+      "DM me your PayPal. No the other one. Wait — did you already send it? Who claimed the jacket first?"
+    </h2>
+    <p class="text-slate-600 text-[0.9rem] mt-5">Every Friday night. Every live sale. It doesn't have to be like this.</p>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="bg-white py-20 px-5">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-14 reveal">
+      <p class="text-[0.72rem] font-bold tracking-[0.1em] uppercase text-slate-400 mb-2">How it works</p>
+      <h2 class="text-[clamp(1.8rem,4vw,2.6rem)] font-black tracking-[-0.035em] text-slate-900 leading-[1.1]">
+        Set up in minutes.<br>Sell without the chaos.
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div class="feature-card reveal bg-slate-50 border border-slate-100 rounded-2xl p-8">
+        <div class="w-11 h-11 bg-pink-50 rounded-xl flex items-center justify-center text-[1.3rem] mb-5 border border-pink-200">📋</div>
+        <div class="text-[0.68rem] font-bold text-pink-500 tracking-[0.08em] uppercase mb-2">Step 1</div>
+        <div class="text-[1.05rem] font-extrabold text-slate-900 mb-[0.6rem] tracking-tight">List your items</div>
+        <p class="text-[0.85rem] text-slate-500 leading-[1.6]">Add a photo, name, price, and quantity for each piece before you go live. Takes two minutes.</p>
+      </div>
+
+      <div class="feature-card reveal bg-slate-50 border border-slate-100 rounded-2xl p-8">
+        <div class="w-11 h-11 bg-pink-50 rounded-xl flex items-center justify-center text-[1.3rem] mb-5 border border-pink-200">🔗</div>
+        <div class="text-[0.68rem] font-bold text-pink-500 tracking-[0.08em] uppercase mb-2">Step 2</div>
+        <div class="text-[1.05rem] font-extrabold text-slate-900 mb-[0.6rem] tracking-tight">Share your link</div>
+        <p class="text-[0.85rem] text-slate-500 leading-[1.6]">Drop it in your bio, your story, or pin it in comments. Buyers tap it and see exactly what's for sale.</p>
+      </div>
+
+      <div class="feature-card reveal bg-slate-50 border border-slate-100 rounded-2xl p-8">
+        <div class="w-11 h-11 bg-pink-50 rounded-xl flex items-center justify-center text-[1.3rem] mb-5 border border-pink-200">💳</div>
+        <div class="text-[0.68rem] font-bold text-pink-500 tracking-[0.08em] uppercase mb-2">Step 3</div>
+        <div class="text-[1.05rem] font-extrabold text-slate-900 mb-[0.6rem] tracking-tight">They claim and pay</div>
+        <p class="text-[0.85rem] text-slate-500 leading-[1.6]">Buyers tap an item, it's locked to them, and payment goes through instantly. Sold items disappear automatically.</p>
+      </div>
+    </div>
+
+    <div class="text-center mt-10 reveal">
+      <p class="text-slate-400 text-[0.88rem]">No Instagram API. No complicated setup. No chasing anyone for payment.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHO IT'S FOR -->
+<section class="bg-slate-50 border-y border-slate-100 py-20 px-6">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex flex-col lg:flex-row items-center gap-14">
+
+      <!-- Conversation mockup -->
+      <div class="flex-shrink-0 reveal w-[300px]">
+        <div class="bg-white border border-slate-200 rounded-[20px] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.05)]">
+          <div class="flex items-center gap-2 pb-4 border-b border-slate-100 mb-4">
+            <div class="w-[34px] h-[34px] rounded-full bg-pink-100 flex items-center justify-center text-[0.9rem]">👗</div>
+            <div>
+              <div class="text-[0.8rem] font-extrabold text-slate-900">vintagebyvera</div>
+              <div class="text-[0.68rem] text-slate-400">Instagram Live · Now</div>
+            </div>
+          </div>
+          <div class="bubble flex justify-end mb-2">
+            <div class="bg-slate-100 px-3 py-2 rounded-[14px_14px_3px_14px] text-[0.78rem] text-slate-900 max-w-[85%] leading-[1.5]">I want the Levi jacket! How do I pay? 😍</div>
+          </div>
+          <div class="bubble flex justify-start mb-2">
+            <div class="bg-pink-500 px-3 py-2 rounded-[14px_14px_14px_3px] text-[0.78rem] text-white max-w-[85%] leading-[1.5]">Link in my bio! Tap LiveCart, claim it and pay there 🙌</div>
+          </div>
+          <div class="bubble flex justify-end mb-2">
+            <div class="bg-slate-100 px-3 py-2 rounded-[14px_14px_3px_14px] text-[0.78rem] text-slate-900 max-w-[85%] leading-[1.5]">Done! It said "claimed" ✅</div>
+          </div>
+          <div class="bubble flex justify-start">
+            <div class="bg-pink-500 px-3 py-2 rounded-[14px_14px_14px_3px] text-[0.78rem] text-white max-w-[85%] leading-[1.5]">Amazing, enjoy it! 💕 Shipping Monday.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copy -->
+      <div class="flex-1 reveal">
+        <p class="text-[0.72rem] font-bold tracking-[0.1em] uppercase text-slate-400 mb-2">Who it's for</p>
+        <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-black tracking-[-0.035em] text-slate-900 leading-[1.15] mb-5">Built for sellers who live on Instagram.</h2>
+        <p class="text-[0.95rem] text-slate-500 leading-[1.7] mb-7">If you're selling vintage clothing, preloved pieces, handmade goods, or collectibles — and you currently handle checkout through DMs, PayPal links, or bank transfers — LiveCart is for you.</p>
+
+        <div class="flex flex-col gap-3">
+          <div class="flex items-start gap-3">
+            <div class="w-[22px] h-[22px] rounded-full bg-pink-50 flex items-center justify-center text-[0.65rem] font-extrabold text-pink-500 shrink-0 mt-[1px]">✓</div>
+            <span class="text-[0.9rem] text-gray-700">Vintage &amp; preloved clothing sellers</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-[22px] h-[22px] rounded-full bg-pink-50 flex items-center justify-center text-[0.65rem] font-extrabold text-pink-500 shrink-0 mt-[1px]">✓</div>
+            <span class="text-[0.9rem] text-gray-700">Handmade &amp; small-batch makers</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-[22px] h-[22px] rounded-full bg-pink-50 flex items-center justify-center text-[0.65rem] font-extrabold text-pink-500 shrink-0 mt-[1px]">✓</div>
+            <span class="text-[0.9rem] text-gray-700">Collectibles, cards &amp; curated drops</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-[22px] h-[22px] rounded-full bg-pink-50 flex items-center justify-center text-[0.65rem] font-extrabold text-pink-500 shrink-0 mt-[1px]">✓</div>
+            <span class="text-[0.9rem] text-gray-700">Anyone not ready for a full Shopify store</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="bg-white py-20 px-5">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-12 reveal">
+      <p class="text-[0.72rem] font-bold tracking-[0.1em] uppercase text-slate-400 mb-2">Why LiveCart</p>
+      <h2 class="text-[clamp(1.7rem,3.5vw,2.4rem)] font-black tracking-[-0.03em] text-slate-900 leading-[1.15]">Simple pricing. No commission.</h2>
+      <p class="text-slate-500 mt-3 text-[0.95rem]">The alternative charges $149 USD/month plus 5% of every sale. That's not built for you.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 reveal">
+      <div class="border-[1.5px] border-red-100 rounded-2xl p-7 bg-white">
+        <div class="text-2xl mb-3">😩</div>
+        <div class="font-extrabold text-[0.95rem] text-slate-900 mb-3">The DM method</div>
+        <div class="flex flex-col gap-2">
+          <div class="text-[0.82rem] text-slate-400 flex gap-[6px]"><span class="text-red-400 shrink-0">✗</span> Track claims manually</div>
+          <div class="text-[0.82rem] text-slate-400 flex gap-[6px]"><span class="text-red-400 shrink-0">✗</span> Chase payments for days</div>
+          <div class="text-[0.82rem] text-slate-400 flex gap-[6px]"><span class="text-red-400 shrink-0">✗</span> No buyer protection</div>
+          <div class="text-[0.82rem] text-slate-400 flex gap-[6px]"><span class="text-red-400 shrink-0">✗</span> Double-sell the same item</div>
+        </div>
+      </div>
+
+      <div class="border-[1.5px] border-slate-200 rounded-2xl p-7 bg-white">
+        <div class="text-2xl mb-3">💸</div>
+        <div class="font-extrabold text-[0.95rem] text-slate-900 mb-3">CommentSold</div>
+        <div class="flex flex-col gap-2">
+          <div class="text-[0.82rem] text-slate-400 flex gap-[6px]"><span class="text-red-400 shrink-0">✗</span> $149 USD/month to start</div>
+          <div class="text-[0.82rem] text-slate-400 flex gap-[6px]"><span class="text-red-400 shrink-0">✗</span> +5% commission on sales</div>
+          <div class="text-[0.82rem] text-slate-400 flex gap-[6px]"><span class="text-red-400 shrink-0">✗</span> Built for retail businesses</div>
+          <div class="text-[0.82rem] text-slate-400 flex gap-[6px]"><span class="text-red-400 shrink-0">✗</span> Overkill for casual sellers</div>
+        </div>
+      </div>
+
+      <div class="border-2 border-pink-500 rounded-2xl p-7 bg-pink-50 relative">
+        <div class="absolute -top-px right-5 bg-pink-500 text-white text-[0.62rem] font-extrabold px-[10px] py-[3px] rounded-b-lg tracking-[0.05em]">LIVECART</div>
+        <div class="text-2xl mb-3">🌟</div>
+        <div class="font-extrabold text-[0.95rem] text-slate-900 mb-3">LiveCart</div>
+        <div class="flex flex-col gap-2">
+          <div class="text-[0.82rem] text-gray-700 flex gap-[6px]"><span class="text-pink-500 shrink-0">✓</span> Flat monthly fee, no commission</div>
+          <div class="text-[0.82rem] text-gray-700 flex gap-[6px]"><span class="text-pink-500 shrink-0">✓</span> Set up in under 5 minutes</div>
+          <div class="text-[0.82rem] text-gray-700 flex gap-[6px]"><span class="text-pink-500 shrink-0">✓</span> Buyers pay instantly via Stripe</div>
+          <div class="text-[0.82rem] text-gray-700 flex gap-[6px]"><span class="text-pink-500 shrink-0">✓</span> Built for casual live sellers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="bg-slate-50 border-y border-slate-100 py-20 px-6">
+  <div class="max-w-2xl mx-auto">
+    <div class="text-center mb-10 reveal">
+      <p class="text-[0.72rem] font-bold tracking-[0.1em] uppercase text-slate-400 mb-2">FAQ</p>
+      <h2 class="text-[clamp(1.6rem,3.5vw,2.2rem)] font-black tracking-[-0.03em] text-slate-900 leading-[1.15]">Questions we've already heard</h2>
+    </div>
+
+    <div class="reveal border-[1.5px] border-slate-200 rounded-2xl overflow-hidden bg-white">
+
+      <details class="border-b border-slate-100">
+        <summary class="px-5 py-[1.1rem] text-[0.9rem] font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+          Doesn't Linktree already do this?
+          <span class="faq-plus text-slate-400 text-[1.2rem] leading-none shrink-0">+</span>
+        </summary>
+        <p class="px-5 pb-[1.1rem] text-[0.85rem] text-slate-500 leading-[1.65] m-0">No — Linktree points people to your Shopify, Etsy, or PayPal. It doesn't have any selling functionality. LiveCart is a live checkout page: buyers see your items, claim them, and pay on the spot — all in one place, in real time.</p>
+      </details>
+
+      <details class="border-b border-slate-100">
+        <summary class="px-5 py-[1.1rem] text-[0.9rem] font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+          Do I need a Stripe account or ABN?
+          <span class="faq-plus text-slate-400 text-[1.2rem] leading-none shrink-0">+</span>
+        </summary>
+        <p class="px-5 pb-[1.1rem] text-[0.85rem] text-slate-500 leading-[1.65] m-0">You'll connect a bank account to receive payments — no separate Stripe account needed on your end. No ABN required for personal sellers.</p>
+      </details>
+
+      <details class="border-b border-slate-100">
+        <summary class="px-5 py-[1.1rem] text-[0.9rem] font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+          Does this connect to my Instagram account?
+          <span class="faq-plus text-slate-400 text-[1.2rem] leading-none shrink-0">+</span>
+        </summary>
+        <p class="px-5 pb-[1.1rem] text-[0.85rem] text-slate-500 leading-[1.65] m-0">No — and that's intentional. No Instagram API means no risk of being locked out. You simply share your LiveCart link in your bio, story, or comments. It's just a URL — works anywhere.</p>
+      </details>
+
+      <details class="border-b border-slate-100">
+        <summary class="px-5 py-[1.1rem] text-[0.9rem] font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+          What stops two people buying the same item?
+          <span class="faq-plus text-slate-400 text-[1.2rem] leading-none shrink-0">+</span>
+        </summary>
+        <p class="px-5 pb-[1.1rem] text-[0.85rem] text-slate-500 leading-[1.65] m-0">When a buyer taps Claim, the item is locked to them while they complete payment. If they don't pay within a few minutes, it releases back to available. Only one person can claim and pay for each item.</p>
+      </details>
+
+      <details>
+        <summary class="px-5 py-[1.1rem] text-[0.9rem] font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+          How much will it cost?
+          <span class="faq-plus text-slate-400 text-[1.2rem] leading-none shrink-0">+</span>
+        </summary>
+        <p class="px-5 pb-[1.1rem] text-[0.85rem] text-slate-500 leading-[1.65] m-0">We're finalising pricing, but it'll be a simple flat monthly fee — no commission on your sales. Early waitlist members get a meaningful discount and a say in what we build. Join the list to be first to know.</p>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- BOTTOM CTA -->
+<section class="cta-grad py-24 px-5 text-center">
+  <div class="max-w-md mx-auto">
+    <h2 class="text-white text-[clamp(2rem,5vw,3rem)] font-black tracking-tighter leading-[1.08] mb-[0.85rem]">
+      Your next live sale<br>without the chaos.
+    </h2>
+    <p class="text-white/70 text-base mb-10">Join the waitlist for early access when we launch.</p>
+
+    <form id="bottom-form" onsubmit="submitWaitlist(event,'bottom')">
+      <input id="b-name" name="name" type="text" placeholder="Your name" required
+        class="w-full bg-white/15 border-[1.5px] border-white/25 rounded-[10px] px-4 py-[0.68rem] text-[0.9rem] mb-2 text-white block">
+      <input id="b-email" name="email" type="email" placeholder="Email address" required
+        class="w-full bg-white/15 border-[1.5px] border-white/25 rounded-[10px] px-4 py-[0.68rem] text-[0.9rem] mb-3 text-white block">
+      <button type="submit"
+        class="w-full bg-white text-pink-700 font-extrabold text-[0.95rem] py-3 rounded-[10px] border-0 cursor-pointer">
+        Get early access →
+      </button>
+    </form>
+    <div id="bottom-success" class="hidden bg-white/15 border-[1.5px] border-white/30 text-white p-4 rounded-[10px] font-bold text-[0.9rem]">
+      ✓ You're on the list! We'll be in touch.
+    </div>
+    <p class="text-white/40 text-[0.75rem] mt-[0.85rem]">No spam. Unsubscribe any time.</p>
+  </div>
+</section>
+
+<footer class="bg-slate-900 py-5">
+  <div class="max-w-5xl mx-auto px-5 flex items-center justify-between flex-wrap gap-2">
+    <span class="text-slate-50 font-extrabold text-[0.9rem] tracking-tight">LiveCart</span>
+    <span class="text-slate-600 text-[0.75rem]">© 2026 LiveCart · Built in Melbourne, AU</span>
+  </div>
+</footer>
+
+
+<script>
+  // ─────────────────────────────────────────
+  // WAITLIST FORM SUBMISSION
+  //
+  // TO WIRE UP WITH CLOUDFLARE PAGES:
+  // 1. Create a Cloudflare Worker (or Pages Function at /functions/api/waitlist.js)
+  //    that accepts POST requests and saves to KV, D1, or forwards to an email service.
+  // 2. Replace the console.log below with a real fetch() call.
+  //
+  // Example with Cloudflare Pages Function:
+  //   fetch('/api/waitlist', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify(payload)
+  //   });
+  //
+  // Or POST directly to Loops.so / ConvertKit / Mailchimp API.
+  // ─────────────────────────────────────────
+
+  function submitWaitlist(event, formId) {
+    event.preventDefault();
+
+    const isHero = formId === 'hero';
+    const name  = document.getElementById(isHero ? 'h-name'  : 'b-name').value.trim();
+    const email = document.getElementById(isHero ? 'h-email' : 'b-email').value.trim();
+    const how   = isHero ? document.getElementById('h-how').value.trim() : '';
+
+    if (!email) return;
+
+    const payload = {
+      name,
+      email,
+      how_you_sell: how,
+      source: formId,
+      timestamp: new Date().toISOString()
+    };
+
+    // ── Replace this with your real endpoint ──
+    console.log('Waitlist signup:', payload);
+
+    // Show success state
+    document.getElementById(isHero ? 'hero-form'    : 'bottom-form').classList.add('hidden');
+    document.getElementById(isHero ? 'hero-success' : 'bottom-success').classList.remove('hidden');
+  }
+
+  // ─────────────────────────────────────────
+  // SCROLL REVEAL
+  // ─────────────────────────────────────────
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); }),
+    { threshold: 0.1 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ─────────────────────────────────────────
+  // FAQ — toggle + / × icon
+  // ─────────────────────────────────────────
+  document.querySelectorAll('details').forEach(d => {
+    d.addEventListener('toggle', () => {
+      const icon = d.querySelector('.faq-plus');
+      if (icon) icon.textContent = d.open ? '×' : '+';
+    });
+  });
+
+  // ─────────────────────────────────────────
+  // PLACEHOLDER COLOUR IN CTA SECTION
+  // ─────────────────────────────────────────
+  const s = document.createElement('style');
+  s.textContent = `
+    #bottom-form input::placeholder { color: rgba(255,255,255,0.45); }
+    #bottom-form input:focus { border-color: rgba(255,255,255,0.7) !important; box-shadow: 0 0 0 3px rgba(255,255,255,0.12) !important; }
+  `;
+  document.head.appendChild(s);
+</script>
+</body>
+</html>
