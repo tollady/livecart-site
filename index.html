@@ -114,7 +114,7 @@
     <div class="flex items-center gap-3">
       <a href="#how" class="hidden sm:block text-sm text-gray-500 font-medium hover:text-gray-800 transition-colors">How it works</a>
       <a href="#faq" class="hidden sm:block text-sm text-gray-500 font-medium hover:text-gray-800 transition-colors">FAQ</a>
-      <a href="#waitlist" class="bg-pink-500 text-white text-[0.8rem] font-bold px-4 py-[0.4rem] rounded-lg no-underline">
+      <a href="#bottom-cta" class="bg-pink-500 text-white text-[0.8rem] font-bold px-4 py-[0.4rem] rounded-lg no-underline">
         Join waitlist
       </a>
     </div>
@@ -143,12 +143,12 @@
 
         <!-- WAITLIST FORM -->
         <div id="waitlist" class="max-w-[400px] mx-auto lg:ml-0">
-          <form id="hero-form" onsubmit="submitWaitlist(event,'hero')">
+          <form id="hero-form" onsubmit="submitForm(event,'hero')">
             <input id="h-name" name="name" type="text" placeholder="Your name" required
               class="w-full border-[1.5px] border-slate-200 rounded-[10px] px-4 py-[0.65rem] text-[0.9rem] mb-2 bg-white text-slate-900 block">
             <input id="h-email" name="email" type="email" placeholder="Email address" required
               class="w-full border-[1.5px] border-slate-200 rounded-[10px] px-4 py-[0.65rem] text-[0.9rem] mb-2 bg-white text-slate-900 block">
-            <input id="h-how" name="how_you_sell" type="text" placeholder="How do you handle payments now? (e.g. PayPal DM)"
+            <input id="h-payment" name="how_pay" type="text" placeholder="How do you handle payments now? (e.g. PayPal DM)"
               class="w-full border-[1.5px] border-slate-200 rounded-[10px] px-4 py-[0.65rem] text-[0.9rem] mb-3 bg-white text-slate-900 block">
             <button type="submit"
               class="w-full bg-pink-500 text-white font-extrabold text-[0.95rem] py-3 rounded-[10px] border-0 cursor-pointer">
@@ -458,17 +458,19 @@
 </section>
 
 <!-- BOTTOM CTA -->
-<section class="cta-grad py-24 px-5 text-center">
+<section id="bottom-cta" class="cta-grad py-24 px-5 text-center">
   <div class="max-w-md mx-auto">
     <h2 class="text-white text-[clamp(2rem,5vw,3rem)] font-black tracking-tighter leading-[1.08] mb-[0.85rem]">
       Your next live sale<br>without the chaos.
     </h2>
     <p class="text-white/70 text-base mb-10">Join the waitlist for early access when we launch.</p>
 
-    <form id="bottom-form" onsubmit="submitWaitlist(event,'bottom')">
+    <form id="bottom-form" onsubmit="submitForm(event,'bottom')">
       <input id="b-name" name="name" type="text" placeholder="Your name" required
         class="w-full bg-white/15 border-[1.5px] border-white/25 rounded-[10px] px-4 py-[0.68rem] text-[0.9rem] mb-2 text-white block">
       <input id="b-email" name="email" type="email" placeholder="Email address" required
+        class="w-full bg-white/15 border-[1.5px] border-white/25 rounded-[10px] px-4 py-[0.68rem] text-[0.9rem] mb-2 text-white block">
+      <input id="b-payment" name="how_pay" type="text" placeholder="How do you handle payments now? (e.g. PayPal DM)"
         class="w-full bg-white/15 border-[1.5px] border-white/25 rounded-[10px] px-4 py-[0.68rem] text-[0.9rem] mb-3 text-white block">
       <button type="submit"
         class="w-full bg-white text-pink-700 font-extrabold text-[0.95rem] py-3 rounded-[10px] border-0 cursor-pointer">
@@ -509,30 +511,23 @@
   // Or POST directly to Loops.so / ConvertKit / Mailchimp API.
   // ─────────────────────────────────────────
 
-  function submitWaitlist(event, formId) {
+  async function submitForm(event, formId) {
     event.preventDefault();
+    const prefix = formId === 'hero' ? 'h' : 'b';
+    const name = document.getElementById(prefix + '-name').value;
+    const email = document.getElementById(prefix + '-email').value;
+    const how_pay = document.getElementById(prefix + '-payment')?.value || '';
 
-    const isHero = formId === 'hero';
-    const name  = document.getElementById(isHero ? 'h-name'  : 'b-name').value.trim();
-    const email = document.getElementById(isHero ? 'h-email' : 'b-email').value.trim();
-    const how   = isHero ? document.getElementById('h-how').value.trim() : '';
+    const res = await fetch('https://livecart-worker.ben-25b.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, how_pay })
+    });
 
-    if (!email) return;
-
-    const payload = {
-      name,
-      email,
-      how_you_sell: how,
-      source: formId,
-      timestamp: new Date().toISOString()
-    };
-
-    // ── Replace this with your real endpoint ──
-    console.log('Waitlist signup:', payload);
-
-    // Show success state
-    document.getElementById(isHero ? 'hero-form'    : 'bottom-form').classList.add('hidden');
-    document.getElementById(isHero ? 'hero-success' : 'bottom-success').classList.remove('hidden');
+    if (res.ok) {
+      document.getElementById(formId + '-form').style.display = 'none';
+      document.getElementById(formId + '-success').style.display = 'block';
+    }
   }
 
   // ─────────────────────────────────────────
